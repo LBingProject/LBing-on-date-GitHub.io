@@ -1,0 +1,633 @@
+Demo3---iOS9 URL Scheme 适配_引入白名单概念
+
+WWDC 2015 Session 703: "Privacy and Your App （ 时间在30：18左右）关于 URL scheme 的介绍，指出：
+
+enter image description here
+
+也就是说：在iOS9中，如果使用 canOpenURL: 方法，该方法所涉及到的 URL scheme 必须在"Info.plist"中将它们列为白名单，否则不能使用。key叫做LSApplicationQueriesSchemes ，键值内容是
+
+<key>LSApplicationQueriesSchemes</key>
+<array>
+ <string>urlscheme</string>
+ <string>urlscheme2</string>
+ <string>urlscheme3</string>
+ <string>urlscheme4</string>
+</array> 
+白名单上限是50个：
+
+WWDC 2015 Session 703: "Privacy and Your App ）有说明：
+
+“So for apps that are linked before iOS 9 and are running on iOS 9, they will be given 50 distinct URL schemes.” -- WWDC 2015 session 703 Privacy and Your App
+然而，我们却发现了一件意外的事： 当我们在 iOS9-beta（截至本文发布时，iOS9正式版还未发布）中，使用 openURL: 方法时，不在白名单中的 URL 会报错 > “This app is not allowed to query for scheme xxx” 。 无论是官方文档还是 WWDC 的视频中都没有提及 openURL: 方法的这一变动，所以猜测这是 beta 版本一个 bug ，截至本文发布时，iOS9正式版还未发布，期望在正式版中能得以修复。在此之前，可通过将 openURL: 用到的 URL scheme 列入白名单来解决这个 bug 。（经测试：iOS9 beta5中已经修复）
+
+iOS9中 openURL: 方法没有什么实质性的变化，仅仅多了一个确认动作：
+
+enter image description here
+
+苹果为什么要这么做？
+
+在 iOS9 之前，你可以使用 canOpenURL: 监测用户手机里到底装没装微信，装没装微博。但是也有一些别有用心的 App ，这些 App 有一张常用 App 的 URL scheme，然后他们会多次调用canOpenURL: 遍历该表，来监测用户手机都装了什么 App ，比如这个用户装了叫“大姨妈”的App，你就可以知道这个用户是女性，你就可以只推给这个用户女性用品的广告。这是侵犯用户隐私的行为。
+
+这也许就是原因。
+
+本项目中给出了一个演示用的 Demo ，仓库的文件夹叫“Demo3_iOS9URLScheme适配_引入白名单概念”，Demo引用自 LSApplicationQueriesSchemes-Working-Example
+
+Demo结构如下：
+
+enter image description here
+
+主要演示的情景是这样的：
+
+假设有两个App： weixin(微信) and 我的App. 我的App 想监测 weixin(微信) 是否被安装了. "weixin(微信)" 在 info.plist 中定义了 URL scheme :
+
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>weixin</string>
+        </array>
+    </dict>
+</array>
+我的App 想监测 weixin(微信) 是否被安装了 ：
+
+[[UIApplication sharedApplication]
+                    canOpenURL:[NSURL URLWithString:@"weixin(微信)://"]];
+即使你安装了微信，在iOS9中，这有可能会返回NO：
+
+因为你需要将 "weixin(微信)" 添加到 “我的App” 的 info.plist 文件中：
+
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>weixin</string>
+</array>
+（以上只是为了演示，实际开发中，你不仅需要添加“weixin”还需要“wechat”这两个。具体下文给出表格）
+
+关于 openURL: 这个问题，可在 Demo3 中自行测试，如果该 bug 修复了的话，请私信微博@iOS程序犭袁，我再来更新本文。（经测试：iOS9 beta5中已经修复）
+
+另外，推荐一篇博文，其中最关键的是以下部分：
+
+If you call the “canOpenURL” method on a URL that is not in your whitelist, it will return “NO”, even if there is an app installed that has registered to handle this scheme. A “This app is not allowed to query for scheme xxx” syslog entry will appear.
+> If you call the “openURL” method on a URL that is not in your whitelist, it will fail silently. A “This app is not allowed to query for scheme xxx” syslog entry will appear.
+
+常见 URL Scheme
+
+如果想一次性集成最常用的微信、新浪微博、QQ、支付宝四者的白名单，则配置如下：
+
+ <key>LSApplicationQueriesSchemes</key>
+<array>
+    <!-- 微信 URL Scheme 白名单-->
+    <string>wechat</string>
+    <string>weixin</string>
+
+    <!-- 新浪微博 URL Scheme 白名单-->
+    <string>sinaweibohd</string>
+    <string>sinaweibo</string>
+    <string>sinaweibosso</string>
+    <string>weibosdk</string>
+    <string>weibosdk2.5</string>
+
+    <!-- QQ、Qzone URL Scheme 白名单-->
+    <string>mqqapi</string>
+    <string>mqq</string>
+    <string>mqqOpensdkSSoLogin</string>
+    <string>mqqconnect</string>
+    <string>mqqopensdkdataline</string>
+    <string>mqqopensdkgrouptribeshare</string>
+    <string>mqqopensdkfriend</string>
+    <string>mqqopensdkapi</string>
+    <string>mqqopensdkapiV2</string>
+    <string>mqqopensdkapiV3</string>
+    <string>mqzoneopensdk</string>
+    <string>wtloginmqq</string>
+    <string>wtloginmqq2</string>
+    <string>mqqwpa</string>
+    <string>mqzone</string>
+    <string>mqzonev2</string>
+    <string>mqzoneshare</string>
+    <string>wtloginqzone</string>
+    <string>mqzonewx</string>
+    <string>mqzoneopensdkapiV2</string>
+    <string>mqzoneopensdkapi19</string>
+    <string>mqzoneopensdkapi</string>
+    <string>mqzoneopensdk</string>
+
+    <!-- 支付宝  URL Scheme 白名单-->
+    <string>alipay</string>
+    <string>alipayshare</string>
+
+</array>
+plist 文件看起来会是这样的：
+
+enter image description here
+
+其他平台可在下面的列表中查询： 各平台OpenURL白名单说明
+
+平台名称	URL Schem	补充说明
+微信	wechat,
+weixin	
+支付宝	alipay,
+alipayshare	
+QQ	mqqOpensdkSSoLogin,
+mqqopensdkapiV2,
+mqqopensdkapiV3,
+wtloginmqq2,
+mqq,
+mqqapi	
+QZONE	mqzoneopensdk,
+mqzoneopensdkapi,
+mqzoneopensdkapi19,
+mqzoneopensdkapiV2,
+mqqOpensdkSSoLogin,
+mqqopensdkapiV2,
+mqqopensdkapiV3,
+wtloginmqq2,
+mqqapi,
+mqqwpa，
+mqzone，
+mqq	[注:若同时使用QQ和QZONE,则直接添加本格即可]
+新浪微博	sinaweibo,
+sinaweibohd,
+sinaweibosso,
+sinaweibohdsso,
+weibosdk,
+weibosdk2.5	[后两个若导入新浪SDK则需要]
+豆瓣	无需配置	
+开心网	无需配置	
+易信	yixin,
+yixinopenapi	
+Google+	googlechrome,
+googlechrome-x-callback,
+hasgplus4,
+com.google.gppconsent,
+com.google.gppconsent.2.2.0,
+com.google.gppconsent.2.3.0,
+com.google.gppconsent.2.4.0,
+com.google.gppconsent.2.4.1	
+人人网	renrenapi,
+renrenios,
+renreniphone,
+renren,	
+Facebook	见下文	
+Twitter	无需配置	
+Pocket	pocket-oauth-v1	
+Pinterest	pinit	
+Instagram	instagram	
+WhatsApp	whatsapp	
+Line	line	
+KakaoTalk	kakaolink	
+KaokaoStory	storylink	
+LinkedIn	无需配置	
+Tumblr	无需配置	
+非平台类	无需配置	( 如短信，复制，邮件等)
+另外， Facebook 的URL Scheme白名单需要注意：
+
+如果 SDK 版本低于 4.5 应补充
+
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>fbapi</string>
+    <string>fbapi20130214</string>
+    <string>fbapi20130410</string>
+    <string>fbapi20130702</string>
+    <string>fbapi20131010</string>
+    <string>fbapi20131219</string>    
+    <string>fbapi20140410</string>
+    <string>fbapi20140116</string>
+    <string>fbapi20150313</string>
+    <string>fbapi20150629</string>
+    <string>fbauth</string>
+    <string>fbauth2</string>
+    <string>fb-messenger-api20140430</string>
+</array>
+如果使用 FBSDKMessengerShareKit，还要加上
+
+<string>fb-messenger-platform-20150128</string>
+<string>fb-messenger-platform-20150218</string>
+<string>fb-messenger-platform-20150305</string>
+如果使用SDK版本高于4.6，则只需要加上
+
+<key>LSApplicationQueriesSchemes</key>
+<array>
+        <string>fbapi</string>
+        <string>fb-messenger-api</string>
+        <string>fbauth2</string>
+        <string>fbshareextension</string>
+</array>
+参考链接 。
+
+Q-A
+
+Q：我用xcode7编译的app，如果不在plist里面加scheme，ios9下qq就会不显示，因为我用了qqsdk里的判断是否安装qq的方法，我要是直接下载app store上的，没有加scheme，qq也是能显示。
+
+A：本文中所罗列的新特性，多数情况下指的是 iOS9.X-SDK 新特性，AppStore 的版本是基于 iOS8.X-SDK或 iOS7.X-SDK，所以并不受 iOS9新特性约束。也就是说：Xcode7给iOS8打设备包不需要白名单也能调用“canOpenURL” ，Xcode7给iOS9设备打的包则不然，Xcode7和iOS9缺一不可，才需要适配URL Scheme。
+
+那么，如何确认自己项目所使用的 SDK？在Targets->Build Setting-->Architectures
+
+enter image description here
+
+Q：我们自己的应用跳到微信、支付宝、微博等的URLScheme是固定几个，但是从微信、支付宝、微博跳回到我们的应用的URLScheme可能是成千上万个，那他们那些大厂是如何做这个白名单？
+
+A：白名单策略影响的仅仅是 canOpenURL: 接口，OpenURL: 不受影响，这些大厂只调用 openURL: 所以不受 iOS9 的影响。
+
+Q：文中提到了设置白名单的原因，然而，如果这些别有用心的APP在它自己的白名单列出它关心的APP, 然后依次调用canOpenURL来检测，照样可以监控用户都安装了哪些APP啊？所以我依然不明白苹果这样做得原因。
+
+A：白名单的数目上限是50个。苹果这样子做，使得最多只能检测50个App。
+
+Q：按照文中的适配方法，error原因就没有了的确没问题了，但是还是会打印如下信息：
+
+ -canOpenURL: failed for URL: "XXXXXXXXXX" - error: "(null)"。
+A：这个模拟器的一个 bug，无论使用iOS9的真机还是模拟器均出现该问题，估计 Xcode 后续的升级中会修复掉。
+
+那如何判断日志究竟是 Xcode bug 造成的还是没有适配造成的？看error的值，如果是null，则是 bug。（2015-09-21更）
+
+6. iPad适配Slide Over 和 Split View
+
+enter image description here
+
+【iPad适配Slide Over 和 Split View】 若想适配multi tasking特性，唯一的建议：弃纯代码，改用storyboard、xib，纵观苹果WWDC所有Demo均是如此：
+
+Mysteries of Auto Layout, Part 1
+
+What's New in Storyboards
+
+Implementing UI Designs in Interface Builder
+
+Getting Started with Multitasking on iPad in iOS 9
+
+Optimizing Your App for Multitasking on iPad in iOS
+
+7.字体间隙变大导致 UI 显示异常
+
+iOS8中，字体是Helvetica，中文的字体有点类似于“华文细黑”。只是苹果手机自带渲染，所以看上去可能比普通的华文细黑要美观。iOS9中，中文系统字体变为了专为中国设计的“苹方” 有点类似于一种word字体“幼圆”。字体有轻微的加粗效果，并且最关键的是字体间隙变大了！
+
+所以很多原本写死了width的label可能会出现“...”的情况：
+
+情况	显示	解释
+XIB	将 label 的 width 写死	下面这两张图也可以直观的看出同一个界面，同一个label的变化。
+iOS8	enter image description here	正常
+iOS9	enter image description here	最后四位数字、、、
+如果不将 label 的 width 写死，仅仅添加左端约束则右端的四个数字会越界
+
+情况	显示	解释
+XIB	enter image description here	如果仅仅添加左端约束
+iOS8	enter image description here	正常
+iOS9	enter image description here	“3199”这四个数字越界了
+所以为了在界面显示上不出错，就算是固定长度的文字也还是建议使用sizetofit 或者ios向上取整 ceilf() 或者提前计算：
+
+CGSize size = [title sizeWithAttributes:@{NSFontAttributeName: [UIFont systemFontOfSize:14.0f]}];
+CGSize adjustedSize = CGSizeMake(ceilf(size.width), ceilf(size.height));
+8.升级 Xcode7 后的崩溃与警告
+
+旧版本新浪微博 SDK 在 iOS9 上会导致的 Crash
+
+ app was compiled with optimization - stepping may behave oddly; variables may not be available
+打印出来这句话，然后崩溃。多是启动的过程中程序就崩溃。
+
+在iOS9下，新浪微博SDK里面使用的 JSONKit 在部分机型可能导致崩溃。崩溃信息如下图。
+
+enter image description here
+
+解决：更新新浪微博SDK，新浪的SDK最新版做了对iOS9兼容。
+
+iOS9 下使用 Masonry 会引起崩溃的一种情况
+
+在 iOS8（及以前）我们有这样的经验：
+
+leading 与 left 、 trailing 与 right 在正常情况下是等价的 但是当一些布局是从右至左时(比如阿拉伯文?没有类似的经验) 则会对调，换句话说就是基本可以不理不用，用left和right就好了
+（摘自 《Masonry介绍与使用实践(快速上手Autolayout)》 ）
+
+但在概念里，还是一直将 leading 与 left 划为等号，这样做在 iOS8（及以前）上是正常的，但在 iOS9 上这样的观念可能会引起崩溃，比如：
+
+ make.left.equalTo(self.mas_leading).offset(15);
+应该为：
+
+ make.left.equalTo(self.mas_left).offset(15);
+同理 mas_training 也需要改为right
+
+同时也有人反馈说也需要作如下调整否则也会崩溃：
+
+toplayoutGuide 替换成 mas_toplayoutguide bottomlayoutguide 替换成 mas_bottomlayoutguide
+
+而且使用类似 make.top.equalTo(topView.mas_baseline).with.offset(5); 涉及 mas_baseline 的语句也会引起崩溃。
+
+暂时的解决方案是
+
+使用 make.top.equalTo(self.mas_topLayoutGuide).with.offset(5); 来替换原来的 self.topLayoutGuide.mas_baseline 反正效果是一样的
+
+原来的代码：
+
+[self.headerView mas_makeConstraints:^(MASConstraintMaker *make) {
+    UIView *topView = (UIView *)self.topLayoutGuide;
+    make.top.equalTo(topView.mas_baseline).with.offset(5);
+    make.leading.equalTo(self.view.mas_leading).with.offset(10);
+    make.right.equalTo(self.view.mas_right).with.offset(-10);
+    make.height.equalTo(@34);
+}];
+修改后：
+
+[self.headerView mas_makeConstraints:^(MASConstraintMaker *make) {
+    make.top.equalTo(self.mas_topLayoutGuide).with.offset(5);
+    make.left.equalTo(self.view.mas_left).with.offset(10);
+    make.right.equalTo(self.view.mas_right).with.offset(-10);
+    make.height.equalTo(@34);
+}];
+Xcode 升级后，旧的状态栏的样式设置方式会引起警告
+
+<Error>: CGContextSaveGState: invalid context 0x0. If you want to see the backtrace, please set CG_CONTEXT_SHOW_BACKTRACE environmental variable.
+<Error>: CGContextTranslateCTM: invalid context 0x0. If you want to see the backtrace, please set CG_CONTEXT_SHOW_BACKTRACE environmental variable.
+<Error>: CGContextRestoreGState: invalid context 0x0. If you want to see the backtrace, please set CG_CONTEXT_SHOW_BACKTRACE environmental variable.
+出错原因：设置 app 的状态栏样式的时候，使用了旧的方式，在 info.plist 里面的 View controller-based status bar appearance 默认会为 YES，即使不设置也是 YES，但一般 iOS6 的时候为了设置状态栏样式，需要将其设为NO，iOS7，8也兼容，但是到了iOS9 就会报警告。
+
+解决办法：
+
+删除原先的设置代码，通常老的设置方式是这样的：
+
+ //设置状态栏的白色
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+删除的原因见下：
+
+ // Setting the statusBarStyle does nothing if your application is using the default UIViewController-based status bar system.
+@property(readwrite, nonatomic) UIStatusBarStyle statusBarStyle NS_DEPRECATED_IOS(2_0, 9_0, "Use -[UIViewController preferredStatusBarStyle]");
+- (void)setStatusBarStyle:(UIStatusBarStyle)statusBarStyle animated:(BOOL)animated NS_DEPRECATED_IOS(2_0, 9_0, "Use -[UIViewController preferredStatusBarStyle]");
+修改方式是在 Info.plist 文件中做如下修改：
+
+将 View controller-based status bar appearance 删除（默认为 YES），或设置为YES：
+
+对应的 plist 里的 XML源码：
+
+ <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
+看起来长这样：
+
+enter image description here
+
+然后使用新的方式来实现状态栏的样式：
+
+- (UIStatusBarStyle)preferredStatusBarStyle;
+- (UIViewController *)childViewControllerForStatusBarStyle;
+- (void)setNeedsStatusBarAppearanceUpdate
+比如，你想将状态栏设置为白色，就可以这样写：
+
+//设置状态栏的白色
+ -(UIStatusBarStyle)preferredStatusBarStyle
+{
+    return UIStatusBarStyleLightContent;
+}
+记得要 clean 下或者删除应用程序重新运行
+
+Demo4---navigationController状态栏样式新的设置方法
+
+如果你按照上面的方法设置了，但还是不行。八成是 rootViewController 设置的问题，你必须设置 rootViewController，编译器才会去 rootViewController 中重载 preferredStatusBarStyle 方法。
+
+另外当你在 appdelegate 中将 navigationController 设为 rootViewController 的时候：
+
+     self.window.rootViewController = self.navigationController;
+因为 rootViewController 变为了 navigationController，你在 ViewController 里重写 preferredStatusBarStyle 方法是不会起作用的。所以最好的方法是：
+
+ - (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.title = @"微博@iOS程序犭袁";
+    self.navigationController.navigationBar.barStyle = UIBarStyleBlack;
+}
+如果你还是想重写 preferredStatusBarStyle 方法来达到作用，那最好使用分类来解决：
+
+第二种方法：
+
+.h文件：
+
+ //
+//  UINavigationController+StatusBarStyle.h
+//  微博@iOS程序犭袁
+//
+//  Created by  https://github.com/ChenYilong/iOS9AdaptationTips/ on 15/6/8.
+//  Copyright (c) 2015年   http://weibo.com/luohanchenyilong/  . All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface UINavigationController (StatusBarStyle)
+
+@end
+.m文件：
+
+ //
+//  UINavigationController+StatusBarStyle.m
+//  微博@iOS程序犭袁
+//
+//  Created by  https://github.com/ChenYilong/iOS9AdaptationTips/ on 15/6/8.
+//  Copyright (c) 2015年   http://weibo.com/luohanchenyilong/  . All rights reserved.
+//
+
+#import "UINavigationController+StatusBarStyle.h"
+
+@implementation UINavigationController (StatusBarStyle)
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    //also you may add any fancy condition-based code here
+    return UIStatusBarStyleLightContent;
+}
+
+@end
+但最好不要通过 Category 重写 preferredStatusBarStyle 的方式来指定 status bar 样式。按照苹果官方的解释：
+
+If the name of a method declared in a category is the same as a method in the original class, or a method in another category on the same class (or even a superclass), the behavior is undefined as to which method implementation is used at runtime. This is less likely to be an issue if you’re using categories with your own classes, but can cause problems when using categories to add methods to standard Cocoa or Cocoa Touch classes.
+所以推荐第一种的方法，不推荐第二种。
+
+我在仓库里给出了 navigation 的两种设置方法，见Demo4。
+
+参考链接： preferredStatusBarStyle isn't called--For anyone using a UINavigationController:
+
+Xcode7 在 debug 状态下也生成 .dSYM 文件引起的警告
+
+Xcode6 的工程升级到 Xcode7上来，会报警告：
+
+enter image description here
+
+这是 debug 编译时导出符号文件出现的告警，
+
+然而新建的Xcode7工程不会有该问题。
+
+解决方法是让 debug 编译的时候不生成符号文件：
+
+enter image description here
+
+Xcode7 无法使用 8.x 系统的设备调试，一运行就报错 there is an intenal API error
+
+enter image description here
+
+Xcode7 调试 iOS8.x 的真机，需要确保项目名改为英文，中间含有中文会报错 there is an intenal API error
+
+按照下面的步骤检查：
+
+bulid settings -> packaging -> product name
+
+使用了 HTML 的 iframe 元素可能导致无法从 Safari 跳转至 App
+
+我们都知道，从网易新闻分享一条新闻到QQ，然后从QQ中打开链接再用safari打开链接，在iOS8上，这个时候会跳转到网易新闻App。但是现在（2015年09月23日）版本的网易新闻在 iOS9 就不能正常跳转，会跳转到 App Store 页面并提示要不要打开 App Store。
+
+这是很可能是因为使用了 HTML 的 iframe 元素，并将自定义的链接放进了该元素中
+
+举例说明：
+
+enter image description here
+
+我之前写的一个 Demo： 模仿 《简书 App》 的效果:在html中跳转到App中的对应页面,并能从App跳转到原来的网址，在例子中直接调用自定义链接在 iOS9上是可以跳转到 App 中的，然而，如果用 iframe 元素包起来就会变不可用。
+
+参考链接：
+
+HTML 的iframe 标签
+iOS 9 safari iframe src with custom url scheme not working
+iOS9锁屏控制台会打印警告
+
+加入运行如下示例代码：
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_async(queue, ^(void) {
+        //在这个10秒内锁屏
+         NSLog(@"准备休眠");
+        sleep(10);
+        NSLog(@"打印成功");
+    });
+}
+应用运行过程中锁屏，总是会出现以下提示：
+
+** -[UIApplication _handleNonLaunchSpecificActions:forScene:withTransitionContext:completion:] ** unhandled action -> <FBSSceneSnapshotAction: 0x16da76c0> {
+    handler = remote;
+    info = <BSSettings: 0x16d80e50> {
+        (1) = 5;
+    };
+}
+当应用处于空闲状态时（无网络请求）锁屏对于用户而言并无较大影响，
+
+但是当应用在执行某个异步任务时（比如下拉刷新一下列表）锁屏，重新解锁进入就可能会发现异步任务失败，控制台也会提示 Error 信息：
+
+** -[UIApplication _handleNonLaunchSpecificActions:forScene:withTransitionContext:completion:] ** unhandled action -> <FBSSceneSnapshotAction: 0x16da76c0> {
+    handler = remote;
+    info = <BSSettings: 0x16d80e50> {
+        (1) = 5;
+    };
+}
+error in __connection_block_invoke_2: Connection interrupted
+以上情况不易复现，但确有发生。
+
+在 iOS8 系统下测试并未发现此问题。
+
+对此并未找到合理的解释和对应的解决办法，如果你有解决方法，欢迎提 PR !
+
+在didFinishLaunchingWithOptions结束后还没有设置window的rootViewController会导致崩溃
+
+iOS9 不允许在 didFinishLaunchingWithOptions 结束了之后，还没有设置 window 的 rootViewController 。 也许是 Xcode7 的编译器本身就不支持。
+
+崩溃时的控制台日志提示：
+
+*** Assertion failure in -[UIApplication _runWithMainScene:transitionContext:completion:], /BuildRoot/Library/Caches/com.apple.xbs/Sources/UIKit_Sim/UIKit-3505.16/UIApplication.m:3294
+
+***  Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'Application windows are expected to have a root view controller at the end of application launch'
+
+*** First throw call stack:
+/*省略*/
+libc++abi.dylib: terminating with uncaught exception of type NSException
+(lldb) 
+解决的方法是先设初始化个值，之后再赋值替换掉：
+
+UIWindow *window = [[UIWindow alloc] initWithFrame:[UIScreenmainScreen].bounds];
+window.rootViewController = [[UIViewController alloc] init];
+尤其注意一种情况，在 iOS8以前，我们有时候会通过在 AppDelegate 中添加另一个 UIWindow ，并修改其 Level 来达到 addSubview 的效果，因而也不设置 window 的 rootViewController ，而是把它直接以视图的形式展示了，则在 iOS8 上是警告，在 iOS9 上就崩溃了。
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window.backgroundColor = [UIColor yellowColor];
+    [self.window makeKeyAndVisible];
+
+    UIWindow *normalWindow = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    normalWindow.backgroundColor = [UIColor blueColor];
+    normalWindow.windowLevel = UIWindowLevelAlert;
+    [normalWindow makeKeyAndVisible];
+
+    return YES;
+}
+这种情况，在 didFinishLaunchingWithOptions 需要修改原来的策略，将第二个 window 类型改为其他类型，比如 viewController 类型、navigation 类型、tabbarController 类型等。
+
+9.Demo5、Demo6--- 搜索 API
+
+导入两个 framework，
+
+然后像设置tableView 的 cell 一样设置下每一个“搜索元素”，搜索元素的组成如下：
+
+enter image description here
+
+详情见 Demo6 代码。
+
+enter image description here
+
+既然刚才说了搜索元素与 tableView 的 cell 非常相似：那么我们就展示一下如何让 tableView 与 CoreSpotlightSearch 进行结合：
+
+详见 Demo6，Demo6 与 Demo5 的主要差异在于：在点击搜索结果跳转到 App 后，还会进一步根据搜索的内容 push 到相应的详情页中：
+
+enter image description here
+
+10.iOS国际化问题：当前设备语言字符串返回有变化。
+
+NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+NSArray *allLanguage = [defaults objectForKey:@"AppleLanguages"];
+NSString *currentLanguage = [allLanguage objectAtIndex:0];
+NSLog(@"The current language is : %@", currentLanguage);
+iOS 9 之前：以上返回结果：语言字符串代码。例如："zh-Hans"
+
+iOS 9:以上返回结果：语言字符串代码 + 地区代码。例如："zh-Hans-US"
+
+备注：
+1.请注意判断当前语言类型，不要用以下形式的代码了，不然在iOS9上就会遇到坑。
+
+if ([currentLanguage isEqualToString:@"zh-Hans"])
+可以使用：
+
+if ([currentLanguage hasPrefix:@"zh-Hans"])
+另外：对于中文，语言有：
+
+简体中文:zh-Hans
+繁体中文:zh-Hant
+香港中文:zh-HK
+澳门中文:zh-MO
+台湾中文:zh-TW
+新加坡中文:zh-SG
+备注：以上iOS9 当前语言字符串返回结果：语言字符串代码 + 地区代码。在某些情况下不是这样，本人手机型号：大陆版电信iPhone5S/A1533/16GB测试结果：zh-HK/zh-TW，在地区为"中国"、"中国香港"、"中国台湾"的时候，显示的还是zh-HK/zh-TW，一旦切换到其它地区，设备语言会自动的切换到中文繁体。请开发人员注意中文的问题！
+
+11.UITableView显示异常
+
+原本在 Xcode6 上完好的项目，在 Xcode7 上一编译， tableView 出了两个问题 ：
+
+代码创建的 tableView 无法隐藏 cell 分割线
+reloadData 刷新失效；
+代码创建的 tableView 无法隐藏 cell 分割线
+
+iOS9 里面用到 tableView 突然跑出来了很多 cell 的分割线， 但是在用xib创建的 tableview，就不存在这个问题
+
+解决方法是将设置分割线隐藏的方法 self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone; 写在 -layoutSubviews 中：
+
+-(void)layoutSubviews{
+    [super layoutSubviews];
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+}
+也有人发现另一种方法，就是每次 reloadData 之前都进行一次设置：设置分割线隐藏，这样也可以解决：
+
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+   [self.tableView reloadData]
+虽然也可以解决但是不推荐，这样写会给其他人造成困扰：不知所云。
+
+reloadData 刷新失效
+
+现象： [tableView reloadData] 无效，有一行 cell 明明改变了但是刷新不出来。
+
+感觉可能是这个方法和某种新加的特性冲突了，猜测可能是 reloadData 的操作被推迟到下一个 RunLoop 执行最终失效。
+
+解决的方法是，注释 [tableView reloadData] ，改用局部刷新：
+
+[self.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationNone];
+这两个推测均属 Xcode7 的bug，将来 Apple 肯定会修复。
+
