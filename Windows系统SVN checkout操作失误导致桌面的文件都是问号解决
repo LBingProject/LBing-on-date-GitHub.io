@@ -1,0 +1,18 @@
+SVN checkout操作失误导致桌面的文件都是问号，消除svn选定。
+百度经验:jingyan.baidu.com 
+方法/步
+svn下载地址http://tortoisesvn.net/downloads.zh.html，选择适合自己电脑的位数下载。
+步骤阅读
+右击在桌面运行svn checkout（如果没有出现错误不要尝试）。
+步骤阅读
+步骤阅读
+桌面会出现一大堆的问号等符号（我有密集恐惧症，咦~~）
+步骤阅读
+新建一个a.txt文件把这行代码复制进去for /r . %%a in (.) do @if exist "%%a\.svn" rd /s /q "%%a\.svn"
+步骤阅读
+把文件重命名，a.bat，双击运行a.bat
+步骤阅读
+F5刷新一下界面，界面会所以的标记消失，恢复正常
+步骤阅
+如果按完F5还没刷新完没有成功就重启电脑试一试。
+Ipconfig查看本地ip地址
