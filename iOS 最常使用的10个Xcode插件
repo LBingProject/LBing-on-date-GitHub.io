@@ -1,0 +1,94 @@
+1. XcodeColors：给 Xcode 控制台添加颜色 
+2. XToDo：这个插件不仅高亮 TODO、 FIXME、 ???，还高亮 !!!  注释 
+3. Backlight：高亮当前正在编辑的那一行 
+4. CocoaPods 插件：依赖管理助手 
+5. ACCodeSnippetRepository：把代码同步到 git 仓库 
+6. GitDiff：在 Xcode 高亮当前修改和上次提交之间的不同之处 
+7. KSImageNamed：自动补全图片名 
+8. Peckham：更便捷地导入头文件 
+9. FuzzyAutocomplete：自动补全 
+10. Dash：这个不再重复介绍了吧，看这里：http://top.jobbole.com/347/ 
+一个适当的插件架构可以意味着一个完全不同的IDE。Sublime Text和TextMate就是很好的例子。你知道Xcode也支持插件吗？如果你不这样做我也不会感到吃惊，苹果并没有把太多精力投入到广告Xcode中的这一部分。事实上，很少有文献可用于为Xcode创建插件。
+
+幸运的是，这并未能阻止开发者为Xcode开发插件。有着广泛的插件使得Xcode上的工作更加轻松和愉快，填补了苹果留下的空白领域。在这个快速贴士，我会告诉你一些我每天使用的插件。
+
+Alcatraz
+
+安装Xcode插件通常是挺痛苦的，但用了Alcatraz就不再如此了。今年早些时候，Alcatraz达到一个重要的里程碑，1.0，现在它和Xcode5兼容了。如果你还没有安装Alcatraz呢，那我鼓励你先这样做。
+
+1. XcodeColors
+
+XcodeColors是Robbie Hanson开发的一个插件，给Xcode的控制台增加了颜色。这个插件与CocoaLumberjack组合特别好用，那是一个很棒的日志库，也是Robbie写的。这种组合一直是我多年来真正的救星，它让调试更轻松更好，并色彩缤纷。如果您想了解更多关于XcodeColors和CocoaLumberjack，请阅读本快速贴士。
+
+
+
+2. XToDo
+
+这个插件不仅凸显TODO，FIXME，???，以及！！！注释，也在便利列表呈现他们。
+
+
+
+3.Backlight
+
+一些插件可能看起来微不足道或者很简单，但如果你认同他们的价值就太棒了。Backlight是这样的一个插件。它所做的一切，就是突出显示当前正在编辑的行。很简单，也很有用。
+
+
+
+4. CocoaPods
+
+CocoaPods是事实上的iOS和OS X开发的依赖管理器。如果你不曾使用CocoaPods，那我鼓励你尝试一次。十分钟内本教程可以让你上手。
+
+Xcode还有一个CocoaPods的插件，这使得整合CocoaPods更容易。该CocoaPods的插件增加了一个CocoaPods菜单到Xcode的产品菜单。如果你不喜欢命令行，那么你一定会喜欢这个插件。
+
+
+5. ACCodeSnippetReposito
+
+像管理Xcode的插件一样，在Xcode里管理代码段是不容易的。Arnaud Coomans分享了这个意见，并创建了一个漂亮的插件，用Git仓库来同步Xcode的代码片段。
+
+
+
+美妙之处在于，你已经在Xcode手动添加的代码片段是不会被改变的。从Git仓库导入代码片段只需要点击几下。要备份你的代码片段，这样也是一个聪明的方法，或者如果您使用多台机器，这给了它们一个中心位置。
+
+ 
+
+6. GitDiff
+
+图形用户界面使git对开发者不显得那么吓人了。而像Tower和SourceTree这样的程序是伟大的，我常常想知道我目前工作的文件中有什么改变，在Xcode的代码编辑器。这个GitDiff插件，使这一切成为可能，多么伟大。
+
+它是Xcode的代码编辑器的一个微妙的补强，加上了足够的可见信息以了解上次提交以来发生了什么变化。
+
+
+
+7. KSImageNamed
+
+自动完成是很大的，特别是如果你正在写Objective-C。如果Xcode能自动完成文件名难道不会很伟大吗？比如图像文件的名称。
+
+Kent Sutherland创建的KSImageNamed插件正是这么做的。它不仅将节省您的时间，这将确保错别字是过去的事情了。
+
+
+8.Peckham
+
+添加import语句有时候挺让人讨厌的。如果您需要导入一个pod的头文件，例如，然后Xcode的自动完成功能不会为你工作。Peckham插件解决了这个问题。
+
+按Command-Control-P，输入您要查找的头文件的几个字母，在插件给出的选项列表中选择它。这是一个伟大的对Xcode的自动完成功能的补强。
+
+
+9. FuzzyAutocomplete
+
+说到自动完成的，大多数iOS和OS X开发者已经开始依赖于Xcode的强大的自动完成功能。然而，Xcode的实现自动完成还不完美，你并不总是给出你所期望或想要的建议。
+
+Jack Chen和Leszek Ślażyński已经创造了FuzzyAutocomplete插件来替代之。它利用Xcode用于其快速打开的算法，这在模式匹配方面做得很出色。它工作得非常，非常好。
+
+
+10.Xcode的Dash
+
+Dash是一个用于浏览文档的了不起的软件。我每天都用它。我更喜欢的是它的集成到Xcode，感谢它的Xcode插件。你可能yij知道，你可以按住Option键单击Xcode的编辑器中的符号去跳到文档。不过，我不是Xcode的文档浏览器的忠实粉丝，而这也正是Dash插件工作的地方。
+
+该插件打开Xcode的文档浏览器，而不是Dash，如果你按住Option键点击符号。不仅是Dash速度非常快，它也集成了CocoaDocs。例如，如果你按住Option键点击AFNetworking库的方法，那么Dash将显示该方法的文档。我爱这个功能。
+
+
+
+结论
+
+Xcode的插件架构是苹果流行的IDE(Xcode)中最被低估的一个方面。这不是简单的创建没有合法文档的Xcode插件，但我鼓励你至少尝试过我这篇文章中列出的插件。这儿还有几十个其他的Xcode的插件。你用哪个插件来让您的工作？或者你已经创建了一个自己的？
+
